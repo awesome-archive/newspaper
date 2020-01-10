@@ -8,6 +8,19 @@
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Python Timeline</title>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{GA_ID}}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', '{{GA_ID}}');
+    </script>
+
     <style>
         a[href^="http"]:empty::before {
             content: attr(href);
@@ -200,6 +213,11 @@
             -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);
             box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6)
         }
+
+        button {
+            border: 1px outset;
+            background-color: white;
+        }
     </style>
 </head>
 
@@ -271,7 +289,21 @@
         <br><br><br><br>
         <hr>
     </div>
+    <script src="https://cdn.staticfile.org/clipboard.js/2.0.4/clipboard.min.js"></script>
     <script>
+        try {
+            new window.ClipboardJS('.share-button', {
+                text: function (trigger) {
+                    var article_id = trigger.getAttribute('article_id')
+                    var title_node = document.querySelector('#' + article_id + '>.title>a')
+                    var text = '[' + title_node.innerText + '](' + title_node.getAttribute("href") + ')'
+                    return text
+                }
+            });
+        } catch (error) {
+            console.error(error)
+        }
+
         var next_url = window.location.href.replace('articles.query.html', 'articles.query.json')
 
         function fill_form_params(data) {
@@ -335,13 +367,12 @@
                     <p class="desc" onclick="show_all_desc('_${item.url_key}')">${item.desc}</p>
                     <p class="review">${item.review}</p>
                     <p class="article-source">
-                        ${is_new} <span class="ts_publish" title="${item.ts_create}">${item.ts_publish}</span> - 
-
+                        ${is_new} <span class="ts_create" title="${item.ts_publish}">${item.ts_create}</span> - 
                         <span class="stars star_level_${item.level}">${stars}</span> - 
                         <span class="source"><a href="?source=${item.source}">🔍</a> <a href="/newspaper/source.redirect?name=${item.source}" target="_blank">${item.source}</a></span> - 
                         <span class="host">${host}</span>
+                        <button class="share share-button" title="Click to Copy" article_id="_${item.url_key}">Share</button>
                     </p>
-
                     `
                 node.appendChild(child)
             }

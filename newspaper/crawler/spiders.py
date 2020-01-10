@@ -706,6 +706,8 @@ async def planet_python() -> list:
                 continue
             url = guid[0]
             title = title[0]
+            if 'بايثون العربي' in title:
+                continue
             if 'Python Software Foundation: ' in title:
                 # 已经单独收录过, 不需要再收录一次
                 continue
@@ -940,13 +942,15 @@ async def infoq_python() -> list:
         for item in items:
             try:
                 article: dict = {'source': source}
+                desc = shorten_desc(item['article_summary'])
+                if '本文分享 方巍' in desc:
+                    continue
                 title = item['article_title']
                 url = f"https://www.infoq.cn/article/{item['uuid']}"
-                desc = item['article_summary']
                 ts_publish = ttime(item['publish_time'])
                 article['ts_publish'] = ts_publish
                 article['title'] = title
-                article['desc'] = shorten_desc(desc)
+                article['desc'] = desc
                 article['url'] = url
                 article['url_key'] = get_url_key(article['url'])
                 articles.append(article)
@@ -1238,6 +1242,7 @@ async def dev_io() -> list:
     articles: list = []
     max_page: int = 1
     per_page: int = 15
+    filt_score: int = 10
     curl_string1 = r'''curl 'https://ye5y9r600c-3.algolianet.com/1/indexes/ordered_articles_production/query?x-algolia-agent=Algolia%20for%20vanilla%20JavaScript%203.20.3&x-algolia-application-id=YE5Y9R600C&x-algolia-api-key=YWVlZGM3YWI4NDg3Mjk1MzJmMjcwNDVjMjIwN2ZmZTQ4YTkxOGE0YTkwMzhiZTQzNmM0ZGFmYTE3ZTI1ZDFhNXJlc3RyaWN0SW5kaWNlcz1zZWFyY2hhYmxlc19wcm9kdWN0aW9uJTJDVGFnX3Byb2R1Y3Rpb24lMkNvcmRlcmVkX2FydGljbGVzX3Byb2R1Y3Rpb24lMkNDbGFzc2lmaWVkTGlzdGluZ19wcm9kdWN0aW9uJTJDb3JkZXJlZF9hcnRpY2xlc19ieV9wdWJsaXNoZWRfYXRfcHJvZHVjdGlvbiUyQ29yZGVyZWRfYXJ0aWNsZXNfYnlfcG9zaXRpdmVfcmVhY3Rpb25zX2NvdW50X3Byb2R1Y3Rpb24lMkNvcmRlcmVkX2NvbW1lbnRzX3Byb2R1Y3Rpb24%3D' -H 'accept: application/json' -H 'Referer: https://dev.to/' -H 'Origin: https://dev.to' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36' -H 'DNT: 1' --data '{"params":"query=*&hitsPerPage=''' + str(
         per_page)
     curl_string3 = r'''&attributesToHighlight=%5B%5D&tagFilters=%5B%22python%22%5D"}' --compressed'''
@@ -1259,6 +1264,9 @@ async def dev_io() -> list:
             )
         for item in items:
             try:
+                if item['score'] < filt_score:
+                    # filt by min score
+                    continue
                 article: dict = {'source': source}
                 title = item['title']
                 path = item['path']
@@ -1453,10 +1461,11 @@ async def tuicool_cn() -> list:
     source: str = "推酷(中文)"
     articles: list = []
     max_page: int = 1
-    articles = await common_spider_tuicool('cn',
-                                           source,
-                                           max_page=max_page,
-                                           ignore_descs={'稀土掘金', 'Python猫'})
+    articles = await common_spider_tuicool(
+        'cn',
+        source,
+        max_page=max_page,
+        ignore_descs={'稀土掘金', 'Python猫', 'InfoQ'})
     logger.info(
         f'crawled {len(articles)} articles [{source}]{" ?????????" if not articles else ""}'
     )

@@ -1,10 +1,13 @@
 import json
 import logging
 import os
+import pathlib
 
 
 def init_config():
-    global_configs = os.getenv('newspaper_config')
+    global_configs = os.getenv(
+        'newspaper_config',
+        None) or pathlib.Path('/var/newspaper.conf').read_text()
     if global_configs:
         global_configs = json.loads(global_configs)
     else:
@@ -24,3 +27,4 @@ def init_db():
 
 global_configs = init_config()
 ONLINE_HOST = 'www.clericpy.top'
+GA_ID = 'UA-150991415-2'
